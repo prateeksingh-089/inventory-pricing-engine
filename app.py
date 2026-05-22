@@ -12,6 +12,21 @@ st.set_page_config(
     layout="wide"
 )
 
+# --- GLOBAL CSS INJECTION TO WIPE OUT THE DEVELOPER TOOLBAR ---
+st.markdown("""
+    <style>
+        /* Force-hide the native Streamlit menu, footer, and container deployment wrappers */
+        #MainMenu {visibility: hidden !important;}
+        footer {visibility: hidden !important;}
+        .stDeployButton {display:none !important;}
+        [data-testid="stAppDeployButton"] {display: none !important;}
+        div[data-testid="stDecoration"] {display: none !important;}
+        button[title="Manage app"] {display: none !important;}
+        iframe[title="Manage app"] {display: none !important;}
+        header[data-testid="stHeader"] {background: transparent !important;}
+    </style>
+""", unsafe_allow_html=True)
+
 # ==========================================
 # 2. STATE INITIALIZATION & DATA PRESETS
 # ==========================================
@@ -112,7 +127,6 @@ def reset_store():
 # 5. AUTHENTICATION WALL GATEKEEPER
 # ==========================================
 if not st.session_state.authenticated:
-    # Render clean login architecture centered on screen
     st.markdown("<br><br><br>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1, 1.5, 1])
     
@@ -130,7 +144,7 @@ if not st.session_state.authenticated:
             login_btn = st.form_submit_button("Authenticate & Initialize Environment", use_container_width=True)
             
             if login_btn:
-                if username == "admin" and passphrase == "IIM_2027_Success":
+                if username == "admin" and passphrase == "2626228":
                     st.session_state.authenticated = True
                     st.success("Access Granted. Initializing pipelines...")
                     st.rerun()
