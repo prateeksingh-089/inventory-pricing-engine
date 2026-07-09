@@ -144,7 +144,7 @@ if not st.session_state.authenticated:
             login_btn = st.form_submit_button("Authenticate & Initialize Environment", use_container_width=True)
             
             if login_btn:
-                if username == "admin" and passphrase == "IIM_2027_Success":
+                if username == "admin" and passphrase == "2626228":
                     st.session_state.authenticated = True
                     st.success("Access Granted. Initializing pipelines...")
                     st.rerun()
