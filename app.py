@@ -144,13 +144,13 @@ if not st.session_state.authenticated:
             login_btn = st.form_submit_button("Authenticate & Initialize Environment", use_container_width=True)
             
             if login_btn:
-                if username == "admin" and passphrase == "2626228":
+                if username == "admin" and passphrase == "IIM_2027_Success":
                     st.session_state.authenticated = True
                     st.success("Access Granted. Initializing pipelines...")
                     st.rerun()
                 else:
                     st.error("Invalid secure credentials context.")
-    st.stop() # Force execution halt so unauthorized users see absolutely nothing beyond the login form
+    st.stop() 
 
 # ==========================================
 # 6. APPLICATION CANVAS (RUNS ONLY AFTER LOGGED IN)
@@ -202,7 +202,38 @@ if not st.session_state.products.empty:
             else:
                 st.write("❌ Whole warehouse out of stock.")
 
-# LOGISTICS & AUDITS
+# ADD BRAND NEW ITEM FEATURE (INGEST INTO CATALOG)
+with st.sidebar.expander("➕ Ingest Brand New Catalog Item", expanded=False):
+    with st.form(key="add_new_catalog_form", clear_on_submit=True):
+        new_name = st.text_input("New Product Description/Name:")
+        new_cat = st.selectbox("Operational Category Segment:", ["🥦 Fruits & Veggies", "🥛 Milk & Dairy", "🍞 Bread & Bakery", "⚡ Electronics", "🧹 Cleaning Items", "📦 Other Essentials"])
+        new_cost = st.number_input("Wholesale Purchase Cost (₹):", min_value=1.0, value=50.0, step=1.0)
+        new_base = st.number_input("Target Standard Retail Price (₹):", min_value=1.0, value=75.0, step=1.0)
+        new_stock = st.number_input("Initial Shelf Entry Stock Count:", min_value=1, value=20, step=1)
+        new_expiry = st.number_input("Shelf Life Expiration Horizon (Days):", min_value=1, value=10, step=1)
+        
+        add_btn = st.form_submit_button("➕ Register Item Into System", use_container_width=True)
+        
+        if add_btn:
+            if new_name.strip() == "":
+                st.error("Item name cannot be empty.")
+            else:
+                current_df = st.session_state.products.copy()
+                # Check for item name duplicates
+                if new_name.lower() in [x.lower() for x in current_df['name'].tolist()]:
+                    st.error("This product description already exists in the shelf ledger.")
+                else:
+                    next_id = int(current_df['id'].max() + 1) if not current_df.empty else 1
+                    new_row = {
+                        "id": next_id, "name": new_name, "base_price": float(new_base), "current_price": float(new_base), 
+                        "stock": int(new_stock), "days_to_expiry": int(new_expiry), "category": new_cat, "purchase_cost": float(new_cost)
+                    }
+                    st.session_state.products = pd.concat([current_df, pd.DataFrame([new_row])], ignore_index=True)
+                    recalculate_dynamic_prices()
+                    st.success(f"Successfully registered '{new_name}' into inventory arrays!")
+                    st.rerun()
+
+# LOGISTICS REORDERING
 with st.sidebar.expander("🚚 Pipeline Logistics Restocking", expanded=False):
     spoiled_or_empty_options = st.session_state.products[
         (st.session_state.products['stock'] == 0) | (st.session_state.products['days_to_expiry'] == 0)
@@ -225,6 +256,7 @@ with st.sidebar.expander("🚚 Pipeline Logistics Restocking", expanded=False):
     else:
         st.info("All products currently active.")
 
+# MANUAL INVENTORY AUDITS
 with st.sidebar.expander("🔧 Manual Inventory Audit Overrides", expanded=False):
     stock_target_item = st.selectbox("Target Product Row:", options=st.session_state.products['name'].tolist(), key="stock_selector")
     prod_idx = st.session_state.products[st.session_state.products['name'] == stock_target_item].index[0]
